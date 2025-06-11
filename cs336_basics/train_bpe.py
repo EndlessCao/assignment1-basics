@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 from itertools import pairwise
 import regex as re
 from typing import Iterable
+import os
 
 import multiprocessing as mp
 
@@ -111,44 +112,25 @@ if __name__ == "__main__":
     import json
     import time
 
-    FIXTURES_PATH = Path(__file__).parent / "fixtures"
-    input_path = FIXTURES_PATH / "tinystories_sample.txt"
+    FIXTURES_PATH = "/Users/caowei/Workspace/assignment1-basics/tests/fixtures"
+    input_path = FIXTURES_PATH + "/" + "tinystories_sample_5M.txt"
 
     start_time = time.time()
     vocab, merges = train_bpe(
         input_path=input_path,
-        vocab_size=1000,
+        vocab_size=1024,
         special_tokens=["<|endoftext|>"],  # 使用有意义的特殊标记
     )
     end_time = time.time()
 
     # 将词汇表写入文件
-    vocab_path = FIXTURES_PATH / "vocab.json"
-    with open(vocab_path, "w", encoding="utf-8") as f:
-        # 将bytes转换为字符串以便JSON序列化
-        vocab_str = {
-            k: v.decode("utf-8", errors="ignore") if isinstance(v, bytes) else v
-            for k, v in vocab.items()
-        }
-        json.dump(vocab_str, f, indent=2, ensure_ascii=False)
+    vocab_path = FIXTURES_PATH + "/" + "tiny_vocab.json"
 
     # 将合并规则写入文件
-    merges_path = FIXTURES_PATH / "merges.txt"
-    with open(merges_path, "w", encoding="utf-8") as f:
-        # 将每个合并规则写入单独一行
-        for pair in merges:
-            first, second = pair
-            first = (
-                first.decode("utf-8", errors="ignore")
-                if isinstance(first, bytes)
-                else first
-            )
-            second = (
-                second.decode("utf-8", errors="ignore")
-                if isinstance(second, bytes)
-                else second
-            )
-            f.write(f"{first} {second}\n")
+    merges_path = FIXTURES_PATH + "/" + "tiny_merges.txt"
+
+    from utils.io import save_voacb_and_merge
+    save_voacb_and_merge(vocab, merges, vocab_path, merges_path)
 
     print(f"训练完成，用时: {end_time - start_time:.2f}秒")
     print(f"词汇表大小: {len(vocab)}")

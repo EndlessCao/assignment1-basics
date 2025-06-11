@@ -7,7 +7,7 @@ import math
 import os
 from typing import BinaryIO, IO
 from jaxtyping import Float, Int
-from .data import DataLoader
+from data import DataLoader
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -169,7 +169,7 @@ def load_checkpoint(src: str | os.PathLike | BinaryIO | IO[bytes],
     
 
 class Trainer:
-    def __init__(self, model, optimizer, scheduler, tokenizer, config, train_dataset: DataLoader, eval_dataset: DataLoader):
+    def __init__(self, model, optimizer, scheduler, tokenizer, config, data_loader: DataLoader):
         self.model = model
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -178,8 +178,7 @@ class Trainer:
         self.device = config.device
         self.train_config = config
         self.tokenizer = tokenizer
-        self.train_dataset = train_dataset
-        self.eval_dataset = eval_dataset
+        self.data_loader = data_loader
         self.total_iters = config.total_iters
         self.log_interval = config.log_interval
         self.eval_interval = config.eval_interval
@@ -193,7 +192,7 @@ class Trainer:
             iteration = 0
         self.iter_num = iteration
         for iteration in range(iteration, self.total_iters):
-            x, y = self.train_dataset.get_batch(self.batch_size, self.context_length)
+            x, y = self.data_loader.get_batch('train')
             x = x.to(self.device)
             y = y.to(self.device)
             logits = self.model(x)
@@ -214,7 +213,7 @@ class Trainer:
     def eval(self):
         total_loss = 0
         for _ in range(self.eval_iters):
-            x, y = self.eval_dataset.get_batch(self.batch_size, self.context_length)
+            x, y = self.data_loader.get_batch('val')
             x = x.to(self.device)
             y = y.to(self.device)
             with torch.no_grad():

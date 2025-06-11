@@ -82,11 +82,13 @@ class RoPE(nn.Module):
         
         # 将位置编码应用到输入张量
         x_rotated = torch.zeros_like(x)
+        
+        # 处理多头注意力的情况，token_positions形状为[batch_size, seq_len]，而x形状为[batch_size, num_heads, seq_len, d_k]
+        if x.dim() == 4 and token_positions.dim() == 2:
+            # 扩展freqs以匹配x的维度：[batch_size, seq_len, d_k] -> [batch_size, 1, seq_len, d_k]
+            freqs = freqs.unsqueeze(1)
+            
         for i in range(0, self.d_k, 2):
-            # x[..., i] has shape (..., seq_len)
-            # freqs[..., i] has shape (token_pos_batch_dim, token_pos_seq_len_dim)
-            # These are broadcastable if seq_len matches token_pos_seq_len_dim
-            # and leading dimensions of x broadcast with token_pos_batch_dim.
             x_rotated[..., i] = x[..., i] * freqs[..., i] - x[..., i+1] * freqs[..., i+1]
             x_rotated[..., i+1] = x[..., i+1] * freqs[..., i] + x[..., i] * freqs[..., i+1]
         
@@ -157,6 +159,7 @@ class TransformerBlock(nn.Module):
 class TransformerLM(nn.Module):
     def __init__(self, vocab_size: int,context_length:int, num_heads: int, num_layers: int,  d_model: int, d_ff: int,attn_dropout: float = None, ffn_dropout: float = None, device=None, dtype=torch.float32, theta = None):
         super(TransformerLM, self).__init__()
+        self.device = device
         self.vocab_size = vocab_size
         self.embedding = Embedding(vocab_size, d_model, device=device, dtype=dtype)
         #self.positional_embedding = Embedding(context_length, d_model, device=device, dtype=dtype)

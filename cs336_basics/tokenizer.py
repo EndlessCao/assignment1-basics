@@ -41,7 +41,7 @@ class Tokenizer:
         vocab, merges = get_tokenizer_from_vocab_merges_path(vocab_path, merges_path)
         return cls(vocab, merges, special_tokens)
     
-    def encode(self, text: str) -> list[int]:
+    def encode(self, text: str, progress_bar=False) -> list[int]:
         if self.special_tokens:
             pattern = '(' + '|'.join(re.escape(token) for token in self.special_tokens.keys()) + ')'
             chunks = re.split(pattern, text)
@@ -49,8 +49,13 @@ class Tokenizer:
         else:
             chunks = [text]
         input_ids = []
-        for chunk in chunks:
-            input_ids += self._tokenize(chunk)
+        if not progress_bar:
+            for chunk in chunks:
+                input_ids += self._tokenize(chunk)
+        else:
+            from tqdm import tqdm
+            for chunk in tqdm(chunks):
+                input_ids += self._tokenize(chunk)
         return input_ids
     
     def encode_iterable(self, texts: Iterable[str]) -> Iterable[list[int]]:
