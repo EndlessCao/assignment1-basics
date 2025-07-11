@@ -6,10 +6,10 @@ import regex as re
 from typing import Dict, Tuple, Iterable, List
 @dataclass
 class _Vocab:
-    token_to_id: Dict[str, int]
-    id_to_token: Dict[int, str]
+    token_to_id: Dict[bytes, int]
+    id_to_token: Dict[int, bytes]
 class Tokenizer:
-    def __init__(self, vocab: Dict[int, bytes], merges: Iterable[Tuple[bytes, bytes]], special_tokens: Iterable[str]=None):
+    def __init__(self, vocab: Dict[int, bytes], merges: Iterable[Tuple[bytes, bytes]], special_tokens=None):
         id_to_token = vocab
         token_to_id = {token: i for i, token in vocab.items()}
         self.vocab = _Vocab(token_to_id, id_to_token)
@@ -37,7 +37,7 @@ class Tokenizer:
                 else:
                     self.special_tokens[token] = self.vocab.token_to_id[token_byte]
     @classmethod
-    def from_files(cls, vocab_path: str, merges_path: str, special_tokens:Iterable[str]=None):
+    def from_files(cls, vocab_path: str, merges_path: str, special_tokens=None):
         vocab, merges = get_tokenizer_from_vocab_merges_path(vocab_path, merges_path)
         return cls(vocab, merges, special_tokens)
     

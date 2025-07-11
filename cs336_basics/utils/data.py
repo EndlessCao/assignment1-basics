@@ -5,7 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 import mmap
 import os
 
-def load_data(dataset, batch_size, context_length, device='cpu', num_worker = 1):
+def load_data(dataset, batch_size, context_length, device='cpu', num_worker = 1, dtype=torch.int64):
+
 
     # 计算可以采样的最大起始位置
     max_start = len(dataset) - context_length

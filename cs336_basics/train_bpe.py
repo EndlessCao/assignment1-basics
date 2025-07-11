@@ -112,13 +112,13 @@ if __name__ == "__main__":
     import json
     import time
 
-    FIXTURES_PATH = "/Users/caowei/Workspace/assignment1-basics/tests/fixtures"
-    input_path = FIXTURES_PATH + "/" + "tinystories_sample_5M.txt"
+    FIXTURES_PATH = "/home/caowei/workspace/assignment1-basics"
+    input_path = FIXTURES_PATH + "/" + "TinyStoriesV2-GPT4-train.txt"
 
     start_time = time.time()
     vocab, merges = train_bpe(
         input_path=input_path,
-        vocab_size=1024,
+        vocab_size=50000,
         special_tokens=["<|endoftext|>"],  # 使用有意义的特殊标记
     )
     end_time = time.time()

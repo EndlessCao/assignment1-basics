@@ -7,12 +7,14 @@ import math
 import os
 from typing import BinaryIO, IO
 from jaxtyping import Float, Int
-from data import DataLoader
+from cs336_basics.utils.data import DataLoader
+
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def CrossEntropyLoss(inputs: Float[Tensor, " batch_size vocab_size"], targets: Int[Tensor, " batch_size"]):
-    # inputs: prob_logits
+    # inputs: prob_logits, shape: [batch_size, vocab_size] or [batch_size * seq_len, vocab_size]
+    # targets: shape: [batch_size] or [batch_size * seq_len]
     batch_size = inputs.shape[0]
     
     # 对输入进行log_softmax处理
@@ -132,12 +134,17 @@ class CosineScheduler:
 
 
 def gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float, eps=1e-6):
-    # 计算所有参数的梯度的L2范数
-    total_norm = torch.norm(torch.stack([p.grad.detach() for p in parameters if p.grad is not None]), 2)
+    # 计算所有参数的梯度的L2范数，不使用stack以避免形状不一致的问题
+    total_norm = 0.0
+    for p in parameters:
+        if p.grad is not None:
+            param_norm = p.grad.detach().norm(2)
+            total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** 0.5
     
     # 如果总范数大于最大允许范数,则进行截断
     clip_coef = max_l2_norm / (total_norm + eps)
-    clip_coef = torch.min(clip_coef, torch.ones_like(clip_coef))
+    clip_coef = min(clip_coef, 1.0)
     
     # 对所有参数的梯度进行截断
     for p in parameters:
@@ -169,15 +176,16 @@ def load_checkpoint(src: str | os.PathLike | BinaryIO | IO[bytes],
     
 
 class Trainer:
-    def __init__(self, model, optimizer, scheduler, tokenizer, config, data_loader: DataLoader):
+    def __init__(self, model, optimizer, scheduler, config, data_loader: DataLoader):
         self.model = model
+        # 确保模型在正确的设备上
+        self.model = self.model.to(config.device)
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.batch_size = config.batch_size
         self.context_length = config.context_length
         self.device = config.device
         self.train_config = config
-        self.tokenizer = tokenizer
         self.data_loader = data_loader
         self.total_iters = config.total_iters
         self.log_interval = config.log_interval
@@ -196,6 +204,12 @@ class Trainer:
             x = x.to(self.device)
             y = y.to(self.device)
             logits = self.model(x)
+            
+            # 重塑logits和y以适应CrossEntropyLoss函数
+            batch_size, seq_len = y.shape
+            logits = logits.view(batch_size * seq_len, -1)  # [batch_size * seq_len, vocab_size]
+            y = y.view(-1)  # [batch_size * seq_len]
+            
             loss = CrossEntropyLoss(logits, y)
             self.optimizer.zero_grad()
             loss.backward()
@@ -218,8 +232,14 @@ class Trainer:
             y = y.to(self.device)
             with torch.no_grad():
                 logits = self.model(x)
+                
+                # 重塑logits和y以适应CrossEntropyLoss函数
+                batch_size, seq_len = y.shape
+                logits = logits.view(batch_size * seq_len, -1)  # [batch_size * seq_len, vocab_size]
+                y = y.view(-1)  # [batch_size * seq_len]
+                
                 loss = CrossEntropyLoss(logits, y)
-                total_loss += loss.item()
+            total_loss += loss.item()
         avg_loss = total_loss / self.eval_iters
         logging.info(f"Iter {self.iter_num}: eval loss {avg_loss}")
         return avg_loss
