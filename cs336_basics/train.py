@@ -1,8 +1,8 @@
 import torch
 from nn import TransformerLM
 from optim import *
-from utils.data import DataLoader,Dataset
-from tokenizer import Tokenizer
+from cs336_basics.utils.data import DataLoader,Dataset
+from cs336_basics.tokenizer import Tokenizer
 import pathlib
 import swanlab
 import json

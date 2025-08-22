@@ -1,9 +1,8 @@
-from utils.io import GPT2_PRETOKENIZER_PATTERN
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from cs336_basics.utils.io import GPT2_PRETOKENIZER_PATTERN
+from concurrent.futures import ThreadPoolExecutor
 from collections import Counter, defaultdict
-from itertools import pairwise
 import regex as re
-from typing import Iterable, Tuple, Sequence, List
+from typing import Tuple, Sequence
 from pathlib import Path
 from tqdm import tqdm
 import multiprocessing as mp

@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 import torch
 from torch import Tensor
 from collections.abc import Callable, Iterable
@@ -7,13 +6,6 @@ import math
 import os
 from typing import BinaryIO, IO
 from jaxtyping import Float, Int
-from dataclasses import asdict
-from tqdm import tqdm
-import time
-import pathlib
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def CrossEntropyLoss(inputs: Float[Tensor, " batch_size vocab_size"], targets: Int[Tensor, " batch_size"]):
     # inputs: prob_logits, shape: [batch_size, vocab_size] or [batch_size * seq_len, vocab_size]
@@ -74,9 +66,8 @@ class AdamW(torch.optim.Optimizer):
         }
         super().__init__(params, defaults)
 
-    def step(self, closure: Optional[Callable] = None):
+    def step(self, closure: Optional[Callable] = None) :
         loss = None if closure is None else closure()
-        
         for group in self.param_groups:
             lr = group["lr"]
             beta1 = group["beta1"]
@@ -114,8 +105,6 @@ class AdamW(torch.optim.Optimizer):
                 
                 # AdamW的权重衰减
                 p.data.add_(p.data, alpha=-lr * weight_decay)
-                
-                
         return loss
     def set_lr(self, lr):
         for group in self.param_groups:

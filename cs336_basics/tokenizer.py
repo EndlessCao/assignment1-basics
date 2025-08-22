@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import os
-from utils.io import GPT2_PRETOKENIZER_PATTERN
-from utils.io import get_tokenizer_from_vocab_merges_path
+from cs336_basics.utils.io import GPT2_PRETOKENIZER_PATTERN, get_tokenizer_from_vocab_merges_path
 import regex as re
 from typing import Dict, Sequence, Tuple, Iterable, List
 from dataclasses import dataclass
