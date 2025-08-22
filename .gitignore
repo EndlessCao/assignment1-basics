@@ -161,3 +161,9 @@ cython_debug/
 
 .ruff_cache/
 *.zip
+
+data/*
+swanlog
+cs336_basics/test.py
+cs336_basics/try.py
+cs336_basics/checkpoints
